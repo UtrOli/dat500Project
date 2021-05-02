@@ -1,0 +1,49 @@
+### create table
+####Titles
+CREATE EXTERNAL TABLE titles(asin STRING,title STRING)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t' LINES TERMINATED BY '\n'
+STORED AS TEXTFILE;
+LOAD DATA INPATH '/result/output6' OVERWRITE INTO TABLE titles;
+
+####Price
+CREATE EXTERNAL TABLE prices(asin STRING,price FLOAT)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t' LINES TERMINATED BY '\n'
+STORED AS TEXTFILE;
+LOAD DATA INPATH '/result/output5/part-00000' OVERWRITE INTO TABLE prices;
+
+####Description
+CREATE EXTERNAL TABLE descriptions(asin STRING,description STRING)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t' LINES TERMINATED BY '\n'
+STORED AS TEXTFILE;
+LOAD DATA INPATH '/result/output10/part-00000' OVERWRITE INTO TABLE descriptions;
+
+####Brand
+CREATE EXTERNAL TABLE brands(asin STRING,brand STRING)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t' LINES TERMINATED BY '\n'
+STORED AS TEXTFILE;
+LOAD DATA INPATH '/result/output11/part-00000' OVERWRITE INTO TABLE brands;
+
+####Avgratings
+CREATE EXTERNAL TABLE avgratings(asin STRING,avgrating FLOAT)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t' LINES TERMINATED BY '\n'
+STORED AS TEXTFILE;
+LOAD DATA INPATH '/result/output1/part-00000' OVERWRITE INTO TABLE avgratings;
+
+####Ratingscount
+CREATE EXTERNAL TABLE rcounts(asin STRING,ratingscount INT)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t' LINES TERMINATED BY '\n'
+STORED AS TEXTFILE;
+LOAD DATA INPATH '/result/output8/part-00000' OVERWRITE INTO TABLE rcounts;
+
+### change table to internal
+ALTER TABLE prices SET TBLPROPERTIES('EXTERNAL'='FALSE');
+ALTER TABLE descriptions SET TBLPROPERTIES('EXTERNAL'='FALSE');
+ALTER TABLE avgratings SET TBLPROPERTIES('EXTERNAL'='FALSE');
+ALTER TABLE rcounts SET TBLPROPERTIES('EXTERNAL'='FALSE');
+
+### creating table from all tables and store as ORC file
+create table products stored as orc as 
+select t.asin, t.title, b.brand, p.price, ar.avgrating, rc.ratingscount, d.description 
+from titles t LEFT OUTER JOIN prices p on (t.asin=p.asin) LEFT OUTER JOIN brands b  on (t.asin=b.asin) 
+LEFT OUTER JOIN avgratings ar on (t.asin=ar.asin) LEFT OUTER JOIN rcounts rc on (t.asin=rc.asin)
+LEFT OUTER JOIN descriptions d on (t.asin=d.asin);
